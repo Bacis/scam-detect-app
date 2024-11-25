@@ -24,3 +24,9 @@ chrome-extension/public/manifest.json
 
 # vite timestamp (because of bug from lib, remove it after fix will have been realased)
 **/vite.config.mts.timestamp-*
+
+.venv
+apps/api/venv
+apps/api/.pytest_cache
+apps/api/fine_tuned_model
+apps/api/local_model

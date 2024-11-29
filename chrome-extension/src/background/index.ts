@@ -39,7 +39,18 @@ async function promptLanguageModel(promptText: string): Promise<string> {
   }
 
   try {
-    const instruction = `Analyze the following YouTube short transcript: ${promptText}. Focus on identifying phrases or intents that explicitly ask for money, promote financial transactions, or encourage viewers to invest. Anything else, even talking about other type of crimes like murder, arson, etc., is not a scam. Provide the response in JSON format with a scam rating in a decimal value, where 1 is an absolute scam and closer to 0 is legitimate.`;
+    const instruction = `
+      Analyze the following YouTube short transcript: ${promptText}. 
+      Focus on identifying phrases or intents that explicitly ask for money, 
+      promote financial transactions, or encourage viewers to invest. 
+      Anything else, even talking about other types of crimes like murder, arson, etc., is not a scam. Bevare of satire
+      and sarcasm as youtube is full of funny content. Scams usually are not funny.
+      Scams always communicate directly to the viewer, you have to be careful with indirect communication.
+      Provide the response in JSON format with a scam rating in a decimal value, 
+      where 1 is an absolute scam and closer to 0 is legitimate. 
+      Also, I want you to structure the response in a way that is easy to parse and extract the keys: 
+      scam_rating, phrases_intents, and explanation.
+    `;
     const response = await session.prompt(instruction);
     console.log(`tokens: ${session.tokensSoFar}/${session.maxTokens}`);
     return response;
@@ -57,8 +68,20 @@ function parseMarkdownJSON(markdownText: string) {
     throw new Error('No JSON code block found in markdown');
   }
 
+  let jsonString = jsonMatch[1];
+
+  // Remove any non-JSON text before and after the JSON block
+  const jsonStart = jsonString.indexOf('{');
+  const jsonEnd = jsonString.lastIndexOf('}') + 1;
+
+  if (jsonStart === -1 || jsonEnd === -1) {
+    throw new Error('Invalid JSON format in markdown');
+  }
+
+  jsonString = jsonString.substring(jsonStart, jsonEnd);
+
   try {
-    return JSON.parse(jsonMatch[1]);
+    return JSON.parse(jsonString);
   } catch (error) {
     console.error('Error parsing JSON:', error);
     throw new Error('Invalid JSON format in markdown');
@@ -93,72 +116,39 @@ chrome.tabs.onUpdated.addListener(async (tabId, changeInfo) => {
         .then(transcript => {
           const transcriptText = transcript.map(segment => segment.text).join(' ');
           console.log('Transcript:', transcriptText);
-          promptLanguageModel(transcriptText)
-            .then(response => {
-              console.log('Language model response:', response);
-              try {
-                // Check if the sanitized response is not empty before parsing
-                if (response) {
-                    try {
-                        chrome.tabs.create({ url: 'about:blank' }, (tab) => {
-                          if (tab.id !== undefined) {
-                            console.log('Warning tab opened with ID:', tab.id);
-                            chrome.scripting.executeScript({
-                              target: { tabId: tab.id },
-                              func: () => {
-                                document.addEventListener('DOMContentLoaded', () => {
-                                  const div = document.createElement('div');
-                                  div.style.display = 'flex';
-                                  div.style.justifyContent = 'center';
-                                  div.style.alignItems = 'center';
-                                  div.style.height = '100vh';
-                                  div.style.fontFamily = 'Arial, sans-serif';
-                                  div.style.backgroundColor = 'white';
-                                  
-                                  const h1 = document.createElement('h1');
-                                  h1.style.color = 'red';
-                                  h1.textContent = 'Warning: Potential Scam Detected!';
-                                  
-                                  div.appendChild(h1);
-                                  document.body.appendChild(div);
-                                  document.body.style.margin = '0';
-                                  document.body.style.height = '100vh';
-                                });
-                              },
-                            });
-                          }
-                        });
-                        // const parsedResponse = parseMarkdownJSON(response);
-                        // const scamRating = parsedResponse.scam_rating;
-                        // const phrasesIntents = parsedResponse.phrases_intents;
-                        // const explanation = parsedResponse.explanation;
-
-                        // console.log('Scam Rating:', scamRating);
-                        // console.log('Phrases/Intents:', phrasesIntents);
-                        // console.log('Explanation:', explanation);
-
-                        // chrome.notifications.create('scam-alert-' + Date.now(), {
-                        //   type: 'basic',
-                        //   iconUrl: "/icon-34.png",
-                        //   title: 'Scam Alert',
-                        //   message: `Scam Rating: 'No scam rating provided'}\nExplanation: 'No explanation provided'}`,
-                        // }, (notificationId) => {
-                        //   if (chrome.runtime.lastError) {
-                        //     console.error('Error creating notification:', chrome.runtime.lastError);
-                        //   } else {
-                        //     console.log('Notification created with ID:', notificationId);
-                        //   }
-                        // });
-                    } catch (error) {
-                        console.error('Error parsing language model response:', error);
-                    }
-                } else {
-                    console.error('Sanitized response is empty, cannot parse JSON.');
-                }
-              } catch (error) {
-                console.error('Error parsing language model response:', error);
+          promptLanguageModel(transcriptText).then(response => {
+            try {
+              const parsedResponse = parseMarkdownJSON(response);
+              const scamRating = parsedResponse.scam_rating;
+              console.log('Scam rating:', scamRating);
+              if (scamRating > 0.5 && response) {
+                  try {
+                      chrome.tabs.create({ url: 'new-tab/index.html' }, (tab) => {
+                        if (tab.id !== undefined) {
+                          const dynamicContent = {
+                            message: parsedResponse,
+                          };
+                          
+                          setTimeout(() => {
+                            if (tab.id !== undefined) {
+                              chrome.tabs.sendMessage(tab.id, { content: dynamicContent }).then(() => {
+                                console.log('Dynamic content sent to the new tab');
+                              }).catch(error => {
+                                console.error('Error sending message to the new tab:', error);
+                              });
+                            } else {
+                              console.error('Tab ID is undefined, cannot send message.');
+                            }
+                          }, 100);
+                        }
+                      });
+                  } catch (error) {
+                      console.error('Error parsing language model response:', error);
+                  }
               }
-              chrome.notifications.create('scam-alert', notificationOptions('Scam Alert', response));
+            } catch (error) {
+              console.error('Error parsing language model response:', error);
+            }
             })
             .catch(error => {
               console.error('Error prompting language model:', error);

@@ -28,7 +28,8 @@ const manifest = deepmerge(
     version: packageJson.version,
     description: '__MSG_extensionDescription__',
     host_permissions: ['<all_urls>'],
-    permissions: ['storage', 'scripting', 'tabs', 'notifications', 'audio'],
+    permissions: ['storage', 'scripting', 'tabs', 'notifications', 'audio', 'aiLanguageModelOriginTrial', 'about:blank'],
+    trial_tokens: ["Ajpmew7s2q/69gAzgdKZ1+K9B6GIXDoG2vVQrDj3icNaq4svBYNmZdgNMZb23h7xU9Y+n198xybftZofH591KgYAAAB4eyJvcmlnaW4iOiJjaHJvbWUtZXh0ZW5zaW9uOi8vYWJtaWNmbGljYWttcGViYWtsYmRmY2Vva2NnamFtaW8iLCJmZWF0dXJlIjoiQUlQcm9tcHRBUElGb3JFeHRlbnNpb24iLCJleHBpcnkiOjE3NjA0ODYzOTl9"],
     options_page: 'options/index.html',
     background: {
       service_worker: 'background.iife.js',

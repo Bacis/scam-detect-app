@@ -1,14 +1,10 @@
 import 'webextension-polyfill';
-import { exampleThemeStorage } from '@extension/storage';
+import { exampleThemeStorage, youtubeShortsStorageExport } from '@extension/storage';
 import { YoutubeTranscript } from 'youtube-transcript';
 
 exampleThemeStorage.get().then(theme => {
   console.log('theme', theme);
 });
-
-console.log('background loaded');
-console.log("Edit 'chrome-extension/src/background/index.ts' and save to reload.");
-
 interface TranscriptSegment {
   text: string;
   duration: number;
@@ -105,51 +101,46 @@ chrome.tabs.onUpdated.addListener(async (tabId, changeInfo) => {
     const url = new URL(changeInfo.url);
     if (url.hostname === 'www.youtube.com' && url.pathname.startsWith('/shorts/')) {
       const shortId = url.pathname.split('/')[2];
-      transcribeYoutubeShort(shortId)
-        .then(transcript => {
-          const transcriptText = transcript.map(segment => segment.text).join(' ');
-          console.log('Transcript:', transcriptText);
-          promptLanguageModel(transcriptText).then(response => {
+      
+      // Use a reactive approach to listen for changes in the storage
+      youtubeShortsStorageExport.subscribe(async () => {
+        youtubeShortsStorageExport.get().then(async status => {
+          if (status === 'enabled') {
             try {
+              const transcript = await transcribeYoutubeShort(shortId);
+              const transcriptText = transcript.map(segment => segment.text).join(' ');              
+              const response = await promptLanguageModel(transcriptText);
               const parsedResponse = parseMarkdownJSON(response);
               const scamRating = parsedResponse.scam_rating;
               console.log('Scam rating:', scamRating);
+              
               if (scamRating > 0.5 && response) {
-                  try {
-                      chrome.tabs.create({ url: 'new-tab/index.html' }, (tab) => {
+                try {
+                  chrome.tabs.create({ url: 'new-tab/index.html' }, (tab) => {
+                    if (tab.id !== undefined) {
+                      const dynamicContent = {
+                        message: parsedResponse,
+                      };
+                      
+                      setTimeout(() => {
                         if (tab.id !== undefined) {
-                          const dynamicContent = {
-                            message: parsedResponse,
-                          };
-                          
-                          setTimeout(() => {
-                            if (tab.id !== undefined) {
-                              chrome.tabs.sendMessage(tab.id, { content: dynamicContent }).then(() => {
-                                console.log('Dynamic content sent to the new tab');
-                              }).catch(error => {
-                                console.error('Error sending message to the new tab:', error);
-                              });
-                            } else {
-                              console.error('Tab ID is undefined, cannot send message.');
-                            }
-                          }, 100);
+                          chrome.tabs.sendMessage(tab.id, { content: dynamicContent }).catch(console.error);
                         }
-                      });
-                  } catch (error) {
-                      console.error('Error parsing language model response:', error);
-                  }
+                      }, 100);
+                    }
+                  });
+                } catch (error) {
+                  console.error(error);
+                }
               }
             } catch (error) {
-              console.error('Error parsing language model response:', error);
+              console.error(error);
             }
-            })
-            .catch(error => {
-              console.error('Error prompting language model:', error);
-            });
-        })
-        .catch(error => {
-          console.error('Error transcribing YouTube short:', error);
+          }
+        }).catch(error => {
+          console.error(error);
         });
+      });
     }
   }
 });

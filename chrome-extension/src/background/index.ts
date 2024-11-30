@@ -1,10 +1,6 @@
 import 'webextension-polyfill';
-import { exampleThemeStorage, youtubeShortsStorageExport } from '@extension/storage';
+import { youtubeShortsStorageExport } from '@extension/storage';
 import { YoutubeTranscript } from 'youtube-transcript';
-
-exampleThemeStorage.get().then(theme => {
-  console.log('theme', theme);
-});
 interface TranscriptSegment {
   text: string;
   duration: number;
@@ -103,43 +99,42 @@ chrome.tabs.onUpdated.addListener(async (tabId, changeInfo) => {
       const shortId = url.pathname.split('/')[2];
       
       // Use a reactive approach to listen for changes in the storage
-      youtubeShortsStorageExport.subscribe(async () => {
-        youtubeShortsStorageExport.get().then(async status => {
-          if (status === 'enabled') {
-            try {
-              const transcript = await transcribeYoutubeShort(shortId);
-              const transcriptText = transcript.map(segment => segment.text).join(' ');              
-              const response = await promptLanguageModel(transcriptText);
-              const parsedResponse = parseMarkdownJSON(response);
-              const scamRating = parsedResponse.scam_rating;
-              console.log('Scam rating:', scamRating);
-              
-              if (scamRating > 0.5 && response) {
-                try {
-                  chrome.tabs.create({ url: 'new-tab/index.html' }, (tab) => {
-                    if (tab.id !== undefined) {
-                      const dynamicContent = {
-                        message: parsedResponse,
-                      };
-                      
-                      setTimeout(() => {
-                        if (tab.id !== undefined) {
-                          chrome.tabs.sendMessage(tab.id, { content: dynamicContent }).catch(console.error);
-                        }
-                      }, 100);
-                    }
-                  });
-                } catch (error) {
-                  console.error(error);
-                }
+      youtubeShortsStorageExport.get().then(async status => {
+        console.log('youtubeShortsStorageExport', status);
+        if (status === 'enabled') {
+          try {
+            const transcript = await transcribeYoutubeShort(shortId);
+            const transcriptText = transcript.map(segment => segment.text).join(' ');              
+            const response = await promptLanguageModel(transcriptText);
+            const parsedResponse = parseMarkdownJSON(response);
+            const scamRating = parsedResponse.scam_rating;
+            console.log('Scam rating:', scamRating);
+            
+            if (scamRating >= 0 && response) {
+              try {
+                chrome.tabs.create({ url: 'new-tab/index.html' }, (tab) => {
+                  if (tab.id !== undefined) {
+                    const dynamicContent = {
+                      message: parsedResponse,
+                    };
+                    
+                    setTimeout(() => {
+                      if (tab.id !== undefined) {
+                        chrome.tabs.sendMessage(tab.id, { content: dynamicContent }).catch(console.error);
+                      }
+                    }, 100);
+                  }
+                });
+              } catch (error) {
+                console.error(error);
               }
-            } catch (error) {
-              console.error(error);
             }
+          } catch (error) {
+            console.error(error);
           }
-        }).catch(error => {
-          console.error(error);
-        });
+        }
+      }).catch(error => {
+        console.error(error);
       });
     }
   }

@@ -1,17 +1,17 @@
 {
   "extensionDescription": {
     "description": "Extension description",
-    "message": "Chrome extension boilerplate developed with Vite, React and Typescript"
+    "message": "Scam detection extension utilizing LLMs and AI to analyze content and identify suspicious schemes"
   },
   "extensionName": {
     "description": "Extension name",
-    "message": "Chrome extension boilerplate"
+    "message": "Scam Detection Extension"
   },
   "toggleTheme": {
     "message": "Toggle theme"
   },
   "loading": {
-    "message": "Loading..."
+    "message": "Analyzing..."
   },
   "greeting": {
     "description": "Greeting message",

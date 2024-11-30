@@ -5,16 +5,38 @@ import { exampleThemeStorage } from '@extension/storage';
 import { t } from '@extension/i18n';
 import { useEffect, useState } from 'react';
 
+const ScamAlert = ({ scamRating, explanation }: { scamRating: number, explanation: string }) => {
+  return (
+    <div className="flex items-center justify-center h-screen bg-gray-900 text-white">
+      <div className="bg-gray-800 p-8 rounded-lg shadow-lg w-1/2">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-2xl font-bold">Scam Alert!</h2>
+          <div className="bg-red-500 text-white font-bold px-4 py-2 rounded-full">
+            {scamRating}
+          </div>
+        </div>
+        <p className="text-gray-400">
+          {explanation}
+        </p>
+      </div>
+    </div>
+  );
+};
+
 const NewTab = () => {
   const theme = useStorage(exampleThemeStorage);
-  const isLight = theme === 'light';
+  const isLight = theme === 'dark';
   interface IncomingMessage {
     scam_rating: number;
     phrases_intents: string[];
     explanation: string;
   }
 
-  const [incomingMessage, setIncomingMessage] = useState<IncomingMessage | null>(null);
+  const [incomingMessage, setIncomingMessage] = useState<IncomingMessage | null>({
+    scam_rating: 85,
+    phrases_intents: ['suspicious link', 'urgent action required'],
+    explanation: 'The message contains phrases that are commonly associated with scams, such as "suspicious link" and "urgent action required". These phrases are often used to create a sense of urgency and trick the recipient into clicking on a malicious link.'
+  });
 
   useEffect(() => {
     // Listen for messages from the background script
@@ -34,20 +56,11 @@ const NewTab = () => {
   return (
     <div className={`App ${isLight ? 'bg-slate-50' : 'bg-gray-800'}`}>
       <header className={`App-header ${isLight ? 'text-gray-900' : 'text-gray-100'}`}>
-        <div className="flex items-center">
-          <span className="text-8xl">🥷</span>
-          <span className="text-white text-6xl ml-4">Scam Alert!</span>
-        </div>
         {incomingMessage && (
-          <div className="text-white flex">
-            <div className="scam-rating-box bg-red-500 p-4 rounded-md shadow-md my-4 flex items-center w-1/4 h-40">
-              <p className="text-2xl font-bold text-white">Scam Rating: </p>
-              <span className="text-4xl ml-2">{incomingMessage?.scam_rating}</span>
-            </div>
-            <div className="flex-none w-3/4">
-              <p>{incomingMessage?.explanation}</p>
-            </div>
-          </div>
+          <ScamAlert 
+            scamRating={incomingMessage.scam_rating} 
+            explanation={incomingMessage.explanation} 
+          />
         )}
       </header>
     </div>

@@ -14,13 +14,6 @@ interface TranscriptSegment {
   duration: number;
 }
 
-const notificationOptions = (title: string, message: string) => ({
-  type: 'basic',
-  iconUrl: chrome.runtime.getURL('icon-34.png'),
-  title,
-  message,
-} as const);
-
 async function transcribeYoutubeShort(videoId: string): Promise<TranscriptSegment[]> {
   try {
     const transcript = await YoutubeTranscript.fetchTranscript(videoId);

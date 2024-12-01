@@ -48,7 +48,7 @@ async function promptLanguageModel(promptText: string): Promise<string> {
 function parseMarkdownJSON(markdownText: string) {
   // Extract JSON from markdown code block
   const jsonMatch = markdownText.match(/```json\n([\s\S]*?)\n```/);
-  
+
   if (!jsonMatch) {
     throw new Error('No JSON code block found in markdown');
   }
@@ -77,65 +77,72 @@ chrome.aiOriginTrial.languageModel.capabilities().then(capabilities => {
   console.log('Language model capabilities:', capabilities);
 
   if (capabilities.available === 'readily') {
-    chrome.aiOriginTrial.languageModel.create({
-      systemPrompt: 'You are a helpful assistant that identifies financial cryptocurrency scams.',
-      temperature: capabilities.defaultTemperature,
-      topK: capabilities.defaultTopK,
-    }).then(async sessionResponse => {
-      console.log('Language model session created:', sessionResponse);
-      session = sessionResponse;
-    }).catch(error => {
-      console.error('Error creating language model session:', error);
-    });
+    chrome.aiOriginTrial.languageModel
+      .create({
+        systemPrompt: 'You are a helpful assistant that identifies financial cryptocurrency scams.',
+        temperature: capabilities.defaultTemperature,
+        topK: capabilities.defaultTopK,
+      })
+      .then(async sessionResponse => {
+        console.log('Language model session created:', sessionResponse);
+        session = sessionResponse;
+      })
+      .catch(error => {
+        console.error('Error creating language model session:', error);
+      });
   }
 });
 
 chrome.tabs.onUpdated.addListener(async (tabId, changeInfo) => {
   if (changeInfo.url) {
-    console.log("URL changed to:", changeInfo.url);
+    console.log('URL changed to:', changeInfo.url);
     // Handle the URL change
     const url = new URL(changeInfo.url);
     if (url.hostname === 'www.youtube.com' && url.pathname.startsWith('/shorts/')) {
       const shortId = url.pathname.split('/')[2];
-      
+
       // Use a reactive approach to listen for changes in the storage
-      youtubeShortsStorageExport.get().then(async status => {
-        console.log('youtubeShortsStorageExport', status);
-        if (status === 'enabled') {
-          try {
-            const transcript = await transcribeYoutubeShort(shortId);
-            const transcriptText = transcript.map(segment => segment.text).join(' ');              
-            const response = await promptLanguageModel(transcriptText);
-            const parsedResponse = parseMarkdownJSON(response);
-            const scamRating = parsedResponse.scam_rating;
-            console.log('Scam rating:', scamRating);
-            
-            if (scamRating >= 0 && response) {
-              try {
-                chrome.tabs.create({ url: 'new-tab/index.html' }, (tab) => {
-                  if (tab.id !== undefined) {
-                    const dynamicContent = {
-                      message: parsedResponse,
-                    };
-                    
-                    setTimeout(() => {
-                      if (tab.id !== undefined) {
-                        chrome.tabs.sendMessage(tab.id, { content: dynamicContent }).catch(console.error);
-                      }
-                    }, 100);
-                  }
-                });
-              } catch (error) {
-                console.error(error);
+      youtubeShortsStorageExport
+        .get()
+        .then(async status => {
+          console.log('youtubeShortsStorageExport', status);
+          if (status === 'enabled') {
+            try {
+              const transcript = await transcribeYoutubeShort(shortId);
+              const transcriptText = transcript.map(segment => segment.text).join(' ');
+              const response = await promptLanguageModel(transcriptText);
+              const parsedResponse = parseMarkdownJSON(response);
+              const scamRating = parsedResponse.scam_rating;
+              console.log('Scam rating:', scamRating);
+
+              if (scamRating >= 0 && response) {
+                try {
+                  chrome.tabs.create({ url: 'new-tab/index.html' }, tab => {
+                    if (tab.id !== undefined) {
+                      const dynamicContent = {
+                        message: parsedResponse,
+                        url: changeInfo.url,
+                      };
+
+                      setTimeout(() => {
+                        if (tab.id !== undefined) {
+                          chrome.tabs.sendMessage(tab.id, { content: dynamicContent }).catch(console.error);
+                        }
+                      }, 100);
+                    }
+                  });
+                } catch (error) {
+                  console.error(error);
+                }
               }
+            } catch (error) {
+              console.error(error);
             }
-          } catch (error) {
-            console.error(error);
           }
-        }
-      }).catch(error => {
-        console.error(error);
-      });
+        })
+        .catch(error => {
+          console.error(error);
+        });
     }
   }
 });

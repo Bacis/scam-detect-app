@@ -29,7 +29,7 @@ const manifest = deepmerge(
     description: '__MSG_extensionDescription__',
     host_permissions: ['<all_urls>', 'chrome-extension://*'],
     permissions: ['storage', 'scripting', 'tabs', 'notifications', 'audio', 'aiLanguageModelOriginTrial'],
-    trial_tokens: ["Ajpmew7s2q/69gAzgdKZ1+K9B6GIXDoG2vVQrDj3icNaq4svBYNmZdgNMZb23h7xU9Y+n198xybftZofH591KgYAAAB4eyJvcmlnaW4iOiJjaHJvbWUtZXh0ZW5zaW9uOi8vYWJtaWNmbGljYWttcGViYWtsYmRmY2Vva2NnamFtaW8iLCJmZWF0dXJlIjoiQUlQcm9tcHRBUElGb3JFeHRlbnNpb24iLCJleHBpcnkiOjE3NjA0ODYzOTl9"],
+    trial_tokens: [process.env.TRIAL_TOKEN],
     options_page: 'options/index.html',
     background: {
       service_worker: 'background.iife.js',
@@ -37,10 +37,10 @@ const manifest = deepmerge(
     },
     action: {
       default_popup: 'popup/index.html',
-      default_icon: 'icon-34.png',
+      default_icon: 'ninja-icon.png',
     },
     icons: {
-      128: 'icon-128.png',
+      128: 'ninja-icon.png',
     },
     content_scripts: [
       {
@@ -59,7 +59,7 @@ const manifest = deepmerge(
     devtools_page: 'devtools/index.html',
     web_accessible_resources: [
       {
-        resources: ['*.js', '*.css', '*.svg', 'icon-128.png', 'icon-34.png'],
+        resources: ['*.js', '*.css', '*.svg', 'ninja-icon.png'],
         matches: ['*://*/*'],
       },
     ],

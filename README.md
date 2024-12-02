@@ -8,18 +8,27 @@
     - [Pages](#structure-pages)
 - [Getting started](#getting-started)
     - [Chrome](#getting-started-chrome)
-    - [Firefox](#getting-started-firefox)
 - [Install dependency](#install-dependency)
     - [For root](#install-dependency-for-root)
     - [For module](#install-dependency-for-module)
-- [Community](#community)
-- [Reference](#reference)
-- [Star History](#star-history)
-- [Contributors](#contributors)
 
 ## Intro <a name="intro"></a>
 
-This browser extension helps to combat crypto scams while watching YouTube Shorts with the help of specific scam related keywords pretrained dataset pluged into LLMs.
+The project is a browser extension that has youtube shorts integration which listens on changing video content. Once a video changed, it gets video id and pulls out its transcript. It passes the transcript into a gemini nano prompt api which is initialized on launching a browser extension and has initial prompt setup that provides a deep context of potential variations. It also follows a fixed structure of response where it defined scam_score and explanation values which are later displayed on a new tab for a user. It only warns user if scam_score is higher than 0.9. Everything else is disregarded. If validation passes, users get appropriate warning.
+
+## Scam Validation <a name="scam-validation"></a>
+
+The `chrome-extension/src/background/index.ts` file contains the main logic for the browser extension. Below is a brief explanation of the key parts of the code:
+
+1. **Initial Prompts Setup**: The initial prompts are defined to provide context for the language model. These prompts include various transcripts and their corresponding analysis by the assistant, which helps the model understand different scenarios and identify potential scams.
+
+2. **Language Model Initialization**: The language model is initialized using the `chrome.aiOriginTrial.languageModel.create` method. The model is configured with default parameters such as temperature and topK, and the initial prompts are passed to it. This setup ensures that the model is ready to analyze new transcripts.
+
+3. **URL Change Listener**: The extension listens for changes in the URL of the active tab using `chrome.tabs.onUpdated.addListener`. When a YouTube Shorts URL is detected, the extension retrieves the video ID and proceeds to transcribe the video.
+
+4. **Transcript Analysis**: The transcript of the YouTube Short is obtained using the `transcribeYoutubeShort` function. The transcript text is then passed to the language model for analysis. The response from the model is parsed to extract the scam rating and other relevant information.
+
+5. **Scam Detection and User Notification**: If the scam rating is higher than 0.9, the extension creates a new tab to display a warning to the user. The warning includes the parsed response from the language model and the URL of the YouTube Short. This helps users identify and avoid potential scams.
 
 ## Features <a name="features"></a>
 
@@ -73,7 +82,7 @@ This browser extension helps to combat crypto scams while watching YouTube Short
 
 ## Env Variables
 
-1. Copy `.example.env` and paste it as `.env` in the same path
+1. Copy `chrome-extension/.example.env` and paste it as `.env` in the same path
 2. Add a new record inside `.env`
 3. Add this key with type for value to `vite-env.d.ts` (root) to `ImportMetaEnv`
 4. Then you can use it with `import.meta.env.{YOUR_KEY}` like with standard [Vite Env](https://vitejs.dev/guide/env-and-mode)

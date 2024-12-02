@@ -208,7 +208,7 @@ chrome.tabs.onUpdated.addListener(async (tabId, changeInfo) => {
               const scamRating = parsedResponse.scam_rating;
               console.log('Scam rating:', scamRating);
 
-              if (scamRating >= 0 && response) {
+              if (scamRating > 0.9 && response) {
                 try {
                   chrome.tabs.create({ url: 'new-tab/index.html' }, tab => {
                     if (tab.id !== undefined) {

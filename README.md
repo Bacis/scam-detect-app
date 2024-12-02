@@ -1,3 +1,7 @@
+# Anti-Scam Ninja
+![Header Image](header.png)
+
+
 ## Table of Contents
 
 - [Intro](#intro)

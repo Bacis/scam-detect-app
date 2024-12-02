@@ -5,8 +5,6 @@ import dotenv from 'dotenv';
 // Load environment variables from .env file
 dotenv.config({ path: '.env' });
 
-console.log('TRIAL_TOKEN:', process.env.TRIAL_TOKEN);
-
 const packageJson = JSON.parse(fs.readFileSync('../package.json', 'utf8'));
 
 const isFirefox = process.env.__FIREFOX__ === 'true';

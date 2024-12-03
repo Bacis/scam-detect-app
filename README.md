@@ -59,6 +59,11 @@ The `chrome-extension/src/background/index.ts` file contains the main logic for 
 4. Install pnpm globally: `npm install -g pnpm` (check your node version >= 18.19.1))
 5. Run `pnpm install`
 
+### Env Variables
+
+1. Copy `chrome-extension/.example.env` and paste it as `.env` in the same path
+2. Add `TRIAL_TOKEN` to the `.env` file. You can get it from [Google Origin Trial](https://developer.chrome.com/origintrials/#/view_trial/320318523496726529)
+
 ### And then, depending on needs:
 
 ### For Chrome: <a name="getting-started-chrome"></a>
@@ -83,12 +88,5 @@ The `chrome-extension/src/background/index.ts` file contains the main logic for 
 
 `package` - Name of the package you want to install e.g. `nodemon` \
 `module-name` - You can find it inside each `package.json` under the key `name`, e.g. `@extension/content-script`, you can use only `content-script` without `@extension/` prefix
-
-## Env Variables
-
-1. Copy `chrome-extension/.example.env` and paste it as `.env` in the same path
-2. Add a new record inside `.env`
-3. Add this key with type for value to `vite-env.d.ts` (root) to `ImportMetaEnv`
-4. Then you can use it with `import.meta.env.{YOUR_KEY}` like with standard [Vite Env](https://vitejs.dev/guide/env-and-mode)
 
 Made by [Andrius Bacianskas](https://bacianskas.com)

@@ -16,10 +16,6 @@
     - [For root](#install-dependency-for-root)
     - [For module](#install-dependency-for-module)
 
-## Intro <a name="intro"></a>
-
-The project is a browser extension that has youtube shorts integration which listens on changing video content. Once a video changed, it gets video id and pulls out its transcript. It passes the transcript into a gemini nano prompt api which is initialized on launching a browser extension and has initial prompt setup that provides a deep context of potential variations. It also follows a fixed structure of response where it defined scam_score and explanation values which are later displayed on a new tab for a user. It only warns user if scam_score is higher than 0.9. Everything else is disregarded. If validation passes, users get appropriate warning.
-
 ## Scam Validation <a name="scam-validation"></a>
 
 The `chrome-extension/src/background/index.ts` file contains the main logic for the browser extension. Below is a brief explanation of the key parts of the code:

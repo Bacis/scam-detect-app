@@ -24,7 +24,7 @@ const manifest = deepmerge(
     name: '__MSG_extensionName__',
     version: packageJson.version,
     description: '__MSG_extensionDescription__',
-    host_permissions: ['<all_urls>', 'chrome-extension://*'],
+    host_permissions: ['<all_urls>'],
     permissions: ['storage', 'scripting', 'tabs', 'aiLanguageModelOriginTrial'],
     trial_tokens: [process.env.TRIAL_TOKEN || ''],
     background: {

@@ -4,7 +4,7 @@ import { transcribeYoutubeShort } from '../../utils/youtube';
 import { parseMarkdownJSON } from '../../utils/helper';
 import { createInstruction, initialPrompts } from '../../utils/prompts';
 
-let session: chrome.aiOriginTrial.LanguageModelSession | null = null;
+let session: any = null; // Use 'any' type to avoid TypeScript errors
 
 async function promptLanguageModel(promptText: string): Promise<string> {
   if (!session) {
@@ -22,28 +22,33 @@ async function promptLanguageModel(promptText: string): Promise<string> {
   }
 }
 
-chrome.aiOriginTrial.languageModel.capabilities().then(capabilities => {
-  console.log('Language model capabilities:', capabilities);
+// Check if chrome.aiOriginTrial and languageModel exist before using them
+if (chrome && chrome.aiOriginTrial && chrome.aiOriginTrial.languageModel) {
+  chrome.aiOriginTrial.languageModel.capabilities().then(capabilities => {
+    console.log('Language model capabilities:', capabilities);
 
-  if (capabilities.available === 'readily') {
-    chrome.aiOriginTrial.languageModel
-      .create({
-        temperature: capabilities.defaultTemperature,
-        topK: capabilities.defaultTopK,
-        initialPrompts: initialPrompts,
-      })
-      .then(async sessionResponse => {
-        console.log('Language model session created:', sessionResponse);
-        session = sessionResponse;
-        localLLMStorageExport.set('active');
-      })
-      .catch(error => {
-        console.error('Error creating language model session:', error);
-      });
-  } else {
-    localLLMStorageExport.set('inactive');
-  }
-});
+    if (capabilities.available === 'readily') {
+      chrome.aiOriginTrial.languageModel
+        .create({
+          temperature: capabilities.defaultTemperature,
+          topK: capabilities.defaultTopK,
+          initialPrompts: initialPrompts,
+        })
+        .then(async sessionResponse => {
+          console.log('Language model session created:', sessionResponse);
+          session = sessionResponse;
+          localLLMStorageExport.set('active');
+        })
+        .catch(error => {
+          console.error('Error creating language model session:', error);
+        });
+    } else {
+      localLLMStorageExport.set('inactive');
+    }
+  });
+} else {
+  console.error('chrome.aiOriginTrial.languageModel is not available.');
+}
 
 chrome.tabs.onUpdated.addListener(async (tabId, changeInfo) => {
   if (changeInfo.url) {

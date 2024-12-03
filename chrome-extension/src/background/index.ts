@@ -1,5 +1,5 @@
 import 'webextension-polyfill';
-import { youtubeShortsStorageExport } from '@extension/storage';
+import { youtubeShortsStorageExport, localLLMStorageExport } from '@extension/storage';
 import { transcribeYoutubeShort } from '../../utils/youtube';
 import { parseMarkdownJSON } from '../../utils/helper';
 import { createInstruction, initialPrompts } from '../../utils/prompts';
@@ -35,10 +35,13 @@ chrome.aiOriginTrial.languageModel.capabilities().then(capabilities => {
       .then(async sessionResponse => {
         console.log('Language model session created:', sessionResponse);
         session = sessionResponse;
+        localLLMStorageExport.set('active');
       })
       .catch(error => {
         console.error('Error creating language model session:', error);
       });
+  } else {
+    localLLMStorageExport.set('inactive');
   }
 });
 

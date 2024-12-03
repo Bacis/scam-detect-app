@@ -1,6 +1,6 @@
 import '@src/Popup.css';
 import { useStorage, withErrorBoundary, withSuspense } from '@extension/shared';
-import { youtubeShortsStorageExport, browsingStorageExport } from '@extension/storage';
+import { youtubeShortsStorageExport, browsingStorageExport, localLLMStorageExport } from '@extension/storage';
 import { type ComponentPropsWithoutRef } from 'react';
 import type { YoutubeShortsStorage } from '@extension/storage';
 
@@ -9,9 +9,12 @@ const Popup = () => {
     <div className={`App bg-gray-800`}>
       <header className="App-header text-gray-900">
         <div className="flex flex-col items-center justify-center">
-          <div className="flex flex-row items-center">
-            <span className="text-5xl">🥷</span>
-            <span className="bg-gray-700 text-xl font-bold text-white p-2 rounded-lg">Anti-Scam Ninja</span>
+          <div className="flex flex-row items-center mt-4">
+            <span className="text-sm text-white mr-2">Local Model Status:</span>
+            <span
+              className={`w-4 h-4 rounded-full ${
+                useStorage(localLLMStorageExport) === 'active' ? 'bg-green-500' : 'bg-red-500'
+              }`}></span>
           </div>
           <div className="flex flex-col mt-4">
             <ToggleButton storage={youtubeShortsStorageExport}>🎥 YouTube Shorts</ToggleButton>

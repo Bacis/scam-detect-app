@@ -5,6 +5,7 @@ import type { BaseStorage } from '../base/types';
 type Theme = 'light' | 'dark';
 type YoutubeShorts = 'enabled' | 'disabled';
 type Browsing = 'enabled' | 'disabled';
+type LocalLLM = 'active' | 'inactive';
 
 type ThemeStorage = BaseStorage<Theme> & {
   toggle: () => Promise<void>;
@@ -18,6 +19,8 @@ export type BrowsingStorage = BaseStorage<Browsing> & {
   toggle: () => Promise<void>;
 };
 
+export type LocalLLMStorage = BaseStorage<LocalLLM>;
+
 const themeStorage = createStorage<Theme>('theme-storage-key', 'light', {
   storageEnum: StorageEnum.Local,
   liveUpdate: true,
@@ -29,6 +32,11 @@ const youtubeShortsStorage = createStorage<YoutubeShorts>('youtube-shorts-storag
 });
 
 const browsingStorage = createStorage<Browsing>('browsing-storage-key', 'enabled', {
+  storageEnum: StorageEnum.Local,
+  liveUpdate: true,
+});
+
+const localLLMStorage = createStorage<LocalLLM>('local-llm-storage-key', 'inactive', {
   storageEnum: StorageEnum.Local,
   liveUpdate: true,
 });
@@ -59,4 +67,8 @@ export const browsingStorageExport: BrowsingStorage = {
       return currentStatus === 'enabled' ? 'disabled' : 'enabled';
     });
   },
+};
+
+export const localLLMStorageExport: LocalLLMStorage = {
+  ...localLLMStorage,
 };
